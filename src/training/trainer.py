@@ -13,6 +13,15 @@ from torch import nn
 from src.evaluation.metrics import regression_metrics
 
 
+def prepare_training_targets(y, rul_cap=None):
+    """Optionally cap training targets without modifying the original dataset labels."""
+    if rul_cap is None:
+        return y
+    if rul_cap <= 0:
+        raise ValueError("rul_cap must be positive")
+    return y.clamp(max=float(rul_cap))
+
+
 def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -33,6 +42,7 @@ class RULTrainer:
         patience: int = 5,
         device: str | None = None,
         output_dir: str = "experiments/runs/lstm_smoke",
+        rul_cap: float | None = None,
     ):
         self.device = torch.device(
             device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -44,6 +54,9 @@ class RULTrainer:
 
         self.epochs = epochs
         self.patience = patience
+        if rul_cap is not None and rul_cap <= 0:
+            raise ValueError("rul_cap must be positive")
+        self.rul_cap = rul_cap
 
         self.optimizer = torch.optim.Adam(
             self.model.parameters(),
@@ -68,7 +81,11 @@ class RULTrainer:
             self.optimizer.zero_grad(set_to_none=True)
 
             predictions = self.model(x, mask)
-            loss = self.criterion(predictions, y)
+            training_targets = prepare_training_targets(
+                y,
+                self.rul_cap,
+            )
+            loss = self.criterion(predictions, training_targets)
 
             if not torch.isfinite(loss):
                 raise ValueError("Non-finite training loss")
@@ -176,6 +193,7 @@ class RULTrainer:
                         "model_state_dict": best_state,
                         "epoch": best_epoch,
                         "val_metrics": metrics,
+                        "rul_cap": self.rul_cap,
                     },
                     self.output_dir / "best_model.pt",
                 )
@@ -214,6 +232,7 @@ class RULTrainer:
                 p.numel() for p in self.model.parameters()
             ),
             "device": str(self.device),
+            "rul_cap": self.rul_cap,
         }
 
         (self.output_dir / "summary.json").write_text(

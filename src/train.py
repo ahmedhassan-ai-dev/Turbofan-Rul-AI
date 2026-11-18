@@ -20,6 +20,12 @@ def main():
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
+        "--rul-cap",
+        type=float,
+        default=None,
+        help="Optional training RUL cap; None uses uncapped labels",
+    )
+    parser.add_argument(
         "--output-dir",
         type=str,
         default="experiments/runs/lstm_smoke",
@@ -62,6 +68,7 @@ def main():
         learning_rate=args.lr,
         epochs=args.epochs,
         patience=5,
+        rul_cap=args.rul_cap,
         output_dir=str(output_path),
     )
 
