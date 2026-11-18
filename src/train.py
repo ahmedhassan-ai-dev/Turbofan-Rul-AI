@@ -6,6 +6,7 @@ from pathlib import Path
 import torch
 
 from src.datasets.datamodule import create_dataloader
+from src.models.cnn_bilstm_attention import CNNBiLSTMAttention
 from src.models.lstm import RULLSTM
 from src.models.transformer import RULTransformer
 from src.training.trainer import RULTrainer, set_seed
@@ -35,6 +36,16 @@ def build_model(model_name: str, input_size: int):
             dropout=0.1,
         )
 
+    if model_name == "cnn_bilstm_attention":
+        return CNNBiLSTMAttention(
+            input_size=input_size,
+            cnn_channels=64,
+            hidden_size=64,
+            num_layers=2,
+            attention_dim=64,
+            dropout=0.2,
+        )
+
     raise ValueError(f"Unsupported model: {model_name}")
 
 
@@ -45,7 +56,11 @@ def main():
 
     parser.add_argument(
         "--model",
-        choices=["lstm", "transformer"],
+        choices=[
+            "lstm",
+            "transformer",
+            "cnn_bilstm_attention",
+        ],
         default="lstm",
     )
     parser.add_argument("--epochs", type=int, default=3)

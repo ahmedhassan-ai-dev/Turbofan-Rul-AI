@@ -2,6 +2,7 @@
 import pytest
 
 from src.train import build_model
+from src.models.cnn_bilstm_attention import CNNBiLSTMAttention
 from src.models.lstm import RULLSTM
 from src.models.transformer import RULTransformer
 
@@ -14,6 +15,15 @@ def test_build_lstm():
 def test_build_transformer():
     model = build_model("transformer", input_size=17)
     assert isinstance(model, RULTransformer)
+
+
+def test_build_cnn_bilstm_attention():
+    model = build_model(
+        "cnn_bilstm_attention",
+        input_size=17,
+    )
+    assert isinstance(model, CNNBiLSTMAttention)
+    assert model.input_size == 17
 
 
 def test_invalid_model():
