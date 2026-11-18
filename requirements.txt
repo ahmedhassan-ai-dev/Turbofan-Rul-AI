@@ -1,0 +1,21 @@
+# Data processing
+numpy>=1.26,<3
+pandas>=2.2,<3
+scikit-learn>=1.5,<2
+
+# Visualization
+matplotlib>=3.9,<4
+seaborn>=0.13,<1
+
+# Configuration
+PyYAML>=6,<7
+
+# Testing
+pytest>=8,<10
+
+# Progress bars
+tqdm>=4.66,<5
+
+joblib>=1.4,<2
+
+torch>=2.5,<3
