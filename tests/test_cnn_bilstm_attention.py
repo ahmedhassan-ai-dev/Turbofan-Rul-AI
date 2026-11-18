@@ -116,6 +116,56 @@ def test_hybrid_mixed_sequence_lengths():
     )
 
 
+def test_hybrid_without_attention_uses_uniform_valid_weights():
+    torch.manual_seed(42)
+    attention_model = CNNBiLSTMAttention(
+        cnn_channels=8,
+        hidden_size=8,
+        num_layers=1,
+    )
+
+    torch.manual_seed(42)
+    model = CNNBiLSTMAttention(
+        cnn_channels=8,
+        hidden_size=8,
+        num_layers=1,
+        use_attention=False,
+    )
+    model.eval()
+
+    for key, value in model.state_dict().items():
+        torch.testing.assert_close(
+            value,
+            attention_model.state_dict()[key],
+        )
+
+    x = torch.randn(2, 6, 17)
+    mask = torch.tensor([
+        [True, True, True, True, True, True],
+        [False, False, False, True, True, True],
+    ])
+
+    with torch.no_grad():
+        predictions, weights = model(
+            x, mask, return_attention=True
+        )
+
+    assert predictions.shape == (2, 1)
+    assert weights.shape == (2, 6)
+    torch.testing.assert_close(
+        weights,
+        torch.tensor([
+            [1 / 6] * 6,
+            [1 / 3, 1 / 3, 1 / 3, 0, 0, 0],
+        ]),
+    )
+    assert model.attention is None
+    assert not any(
+        key.startswith("attention.")
+        for key in model.state_dict()
+    )
+
+
 def test_hybrid_padding_invariance():
     torch.manual_seed(42)
     model = CNNBiLSTMAttention()
@@ -161,6 +211,84 @@ def test_hybrid_gradient_flow():
         if parameter.requires_grad:
             assert parameter.grad is not None
             assert torch.isfinite(parameter.grad).all()
+
+
+def test_no_attention_uniform_weights():
+    model = CNNBiLSTMAttention(use_attention=False)
+    model.eval()
+
+    x = torch.randn(2, 30, 17)
+
+    mask = torch.zeros(2, 30, dtype=torch.bool)
+    mask[0, -5:] = True
+    mask[1, -10:] = True
+
+    with torch.no_grad():
+        predictions, weights = model(
+            x, mask, return_attention=True
+        )
+
+    expected = torch.zeros_like(weights)
+    expected[0, :5] = 1.0 / 5
+    expected[1, :10] = 1.0 / 10
+
+    assert predictions.shape == (2, 1)
+    assert model.attention is None
+
+    torch.testing.assert_close(weights, expected)
+
+
+def test_no_attention_gradient_flow():
+    model = CNNBiLSTMAttention(
+        cnn_channels=16,
+        hidden_size=16,
+        num_layers=1,
+        use_attention=False,
+    )
+
+    x = torch.randn(4, 30, 17)
+    mask = torch.ones(4, 30, dtype=torch.bool)
+
+    output = model(x, mask)
+    loss = output.square().mean()
+    loss.backward()
+
+    assert torch.isfinite(loss)
+
+    for parameter in model.parameters():
+        assert parameter.grad is not None
+        assert torch.isfinite(parameter.grad).all()
+
+
+def test_shared_initialization_matches():
+    torch.manual_seed(42)
+    full = CNNBiLSTMAttention(use_attention=True)
+
+    torch.manual_seed(42)
+    ablated = CNNBiLSTMAttention(use_attention=False)
+
+    full_state = full.state_dict()
+    ablated_state = ablated.state_dict()
+
+    for name, value in ablated_state.items():
+        torch.testing.assert_close(
+            value,
+            full_state[name],
+            rtol=0,
+            atol=0,
+        )
+
+
+def test_attention_ablation_reduces_parameters():
+    full = CNNBiLSTMAttention()
+    ablated = CNNBiLSTMAttention(use_attention=False)
+
+    full_params = sum(p.numel() for p in full.parameters())
+    ablated_params = sum(p.numel() for p in ablated.parameters())
+
+    assert full_params == 198209
+    assert ablated_params == 189889
+
 
 
 def test_hybrid_invalid_feature_count():

@@ -32,6 +32,7 @@ class CNNBiLSTMAttention(nn.Module):
         num_layers: int = 2,
         attention_dim: int = 64,
         dropout: float = 0.2,
+        use_attention: bool = True,
     ):
         super().__init__()
 
@@ -83,6 +84,10 @@ class CNNBiLSTMAttention(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(64, 1),
         )
+
+        self.use_attention = use_attention
+        if not use_attention:
+            self.attention = None
 
     def forward(
         self,
@@ -143,10 +148,25 @@ class CNNBiLSTMAttention(nn.Module):
             total_length=seq_len,
         )
 
-        context, attention_weights = self.attention(
-            sequence_output,
-            valid_mask,
-        )
+        if self.use_attention:
+            context, attention_weights = self.attention(
+                sequence_output,
+                valid_mask,
+            )
+        else:
+            attention_weights = valid_mask.to(
+                dtype=sequence_output.dtype
+            )
+            attention_weights = attention_weights / (
+                attention_weights.sum(
+                    dim=1,
+                    keepdim=True,
+                ).clamp(min=1)
+            )
+            context = (
+                sequence_output
+                * attention_weights.unsqueeze(-1)
+            ).sum(dim=1)
 
         predictions = self.regression_head(context)
 

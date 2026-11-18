@@ -26,6 +26,30 @@ def test_build_cnn_bilstm_attention():
     assert model.input_size == 17
 
 
+def test_build_cnn_bilstm_no_attention():
+    model = build_model(
+        "cnn_bilstm_no_attention",
+        input_size=17,
+    )
+
+    assert isinstance(model, CNNBiLSTMAttention)
+    assert model.input_size == 17
+    assert model.use_attention is False
+    assert model.attention is None
+
+
 def test_invalid_model():
     with pytest.raises(ValueError):
         build_model("unknown", input_size=17)
+
+
+
+def test_build_hybrid_without_attention():
+    model = build_model(
+        "cnn_bilstm_no_attention",
+        input_size=17,
+    )
+
+    assert isinstance(model, CNNBiLSTMAttention)
+    assert model.use_attention is False
+    assert model.attention is None

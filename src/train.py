@@ -46,6 +46,17 @@ def build_model(model_name: str, input_size: int):
             dropout=0.2,
         )
 
+    if model_name == "cnn_bilstm_no_attention":
+        return CNNBiLSTMAttention(
+            input_size=input_size,
+            cnn_channels=64,
+            hidden_size=64,
+            num_layers=2,
+            attention_dim=64,
+            dropout=0.2,
+            use_attention=False,
+        )
+
     raise ValueError(f"Unsupported model: {model_name}")
 
 
@@ -60,6 +71,7 @@ def main():
             "lstm",
             "transformer",
             "cnn_bilstm_attention",
+            "cnn_bilstm_no_attention",
         ],
         default="lstm",
     )
