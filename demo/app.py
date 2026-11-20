@@ -34,6 +34,11 @@ from src.inference.pipeline import (  # noqa: E402
     validate_raw_frame,
 )
 from src.inference.predictor import RULPredictor  # noqa: E402
+from src.inference.health_dashboard import (  # noqa: E402
+    main_seed_checkpoints,
+    predict_rul_timeline,
+    summarize_seed_disagreement,
+)
 from src.inference.demo_state import (  # noqa: E402
     input_signature,
     is_official_reference_allowed,
@@ -492,6 +497,192 @@ def page_prediction(df, metadata, scaler, checkpoints):
     plt.close(fig)
 
 
+def page_health_intelligence(df, metadata, scaler, checkpoints):
+    """Interactive RUL history and cross-seed variability (no retraining)."""
+    st.header("Engine Health Intelligence")
+    st.caption(
+        "Causal inference across observed cycles. Each plotted prediction "
+        "uses only sensor readings available at that cycle."
+    )
+
+    if df is None:
+        st.info("Load a sample engine or upload a sensor CSV first.")
+        return
+    if not checkpoints:
+        st.error("No trained checkpoints are available.")
+        return
+
+    names = list(checkpoints)
+    default = names.index("transformer") if "transformer" in names else 0
+    choice = st.selectbox(
+        "Model for the RUL timeline",
+        names,
+        index=default,
+        key="health_model",
+    )
+    max_points = st.slider(
+        "Maximum plotted cycles",
+        min_value=20,
+        max_value=120,
+        value=80,
+        step=10,
+        help="Uses the most recent observed endpoints and their preceding windows.",
+        key="health_points",
+    )
+
+    seed_paths = main_seed_checkpoints(read_registry(), choice, ROOT)
+    can_compare = len(seed_paths) >= 2
+    compare_seeds = st.checkbox(
+        "Compare saved training seeds (descriptive model disagreement)",
+        value=can_compare,
+        disabled=not can_compare,
+        key="health_compare_seeds",
+    )
+    if not can_compare:
+        st.caption(
+            "Multi-seed analysis is available for the LSTM, Transformer "
+            "and CNN-BiLSTM-Attention main experiments when at least two "
+            "checkpoints are present."
+        )
+
+    signature = input_signature(
+        df,
+        model_name=(
+            f"health:{choice}:{checkpoints[choice]}:{max_points}:"
+            f"{compare_seeds}:{tuple(seed_paths.items())}"
+        ),
+        source=st.session_state.get("input_source", ""),
+    )
+    saved = st.session_state.get("health_dashboard_result")
+    if saved is not None and saved["signature"] != signature:
+        st.session_state.pop("health_dashboard_result", None)
+        saved = None
+
+    if st.button("Analyze engine health", type="primary", key="health_run"):
+        with st.spinner("Calculating causal RUL predictions from saved checkpoints..."):
+            try:
+                scaled = prepare_scaled_frame(df, metadata, scaler)
+                features = metadata["selected_features"]
+                primary_predictor = load_predictor(checkpoints[choice])
+                primary = predict_rul_timeline(
+                    scaled, features, primary_predictor, max_points,
+                )
+
+                seed_timelines = {}
+                if compare_seeds and can_compare:
+                    for seed, checkpoint in seed_paths.items():
+                        # Reuse the main model's timeline if its checkpoint
+                        # matches a saved main-seed checkpoint.
+                        if checkpoint == checkpoints[choice]:
+                            seed_timelines[seed] = primary
+                        else:
+                            seed_timelines[seed] = predict_rul_timeline(
+                                scaled,
+                                features,
+                                load_predictor(checkpoint),
+                                max_points,
+                            )
+                spread = (
+                    summarize_seed_disagreement(seed_timelines)
+                    if len(seed_timelines) >= 2 else None
+                )
+            except (InputValidationError, FileNotFoundError, ValueError) as error:
+                st.error(str(error))
+                return
+            except Exception as error:  # noqa: BLE001
+                st.error(f"Health analysis failed: {error}")
+                return
+
+            saved = {
+                "signature": signature,
+                "primary": primary,
+                "spread": spread,
+                "seeds": tuple(sorted(seed_timelines)),
+                "family": choice,
+            }
+            st.session_state["health_dashboard_result"] = saved
+
+    if saved is None:
+        st.info("Choose a model and click Analyze engine health.")
+        return
+
+    primary = saved["primary"]
+    spread = saved["spread"]
+    last_prediction = float(primary["predicted_rul"].iloc[-1])
+
+    cards = st.columns(4 if spread is not None else 3)
+    cards[0].metric("Current predicted RUL", f"{last_prediction:.1f} cycles")
+    cards[1].metric("Last observed cycle", int(primary["cycle"].iloc[-1]))
+    cards[2].metric("Timeline predictions", len(primary))
+    if spread is not None:
+        cards[3].metric(
+            "Current seed spread",
+            f"{float(spread['spread_rul'].iloc[-1]):.1f} cycles",
+        )
+
+    st.subheader("RUL degradation timeline")
+    curves = primary.rename(columns={"predicted_rul": "Selected model"})
+    if spread is not None:
+        curves = curves.merge(
+            spread[["cycle", "mean_rul", "min_rul", "max_rul"]]
+            .rename(columns={
+                "mean_rul": "Seed mean",
+                "min_rul": "Seed minimum",
+                "max_rul": "Seed maximum",
+            }),
+            on="cycle",
+            validate="one_to_one",
+        )
+    st.line_chart(curves.set_index("cycle"), width="stretch")
+    st.caption(
+        f"Each RUL prediction uses a full window of "
+        f"{load_predictor(checkpoints[choice]).window_size} observed cycles. "
+        "The plot is inferred from model checkpoints, not measured "
+        "failure outcomes. RUL predictions need not fall monotonically."
+    )
+
+    if spread is not None:
+        st.info(
+            f"Seed range is the observed min–max disagreement across "
+            f"{len(saved['seeds'])} saved training runs "
+            f"(seeds {', '.join(map(str, saved['seeds']))}). "
+            "It is NOT a confidence interval, calibrated uncertainty, "
+            "or a guarantee about actual engine lifetime."
+        )
+
+    st.download_button(
+        "Download timeline CSV",
+        data=curves.to_csv(index=False).encode("utf-8"),
+        file_name="rul_health_timeline.csv",
+        mime="text/csv",
+        key="health_download",
+    )
+
+    st.subheader("Observed sensor behavior")
+    sensors = [
+        name for name in ("sensor_2", "sensor_3", "sensor_4", "sensor_11", "sensor_15")
+        if name in df.columns
+    ]
+    if sensors:
+        selected = st.multiselect(
+            "Sensors to compare (standardized within the displayed history)",
+            sensors,
+            default=sensors[:3],
+            max_selections=4,
+            key="health_sensors",
+        )
+        if selected:
+            readings = df.set_index("cycle")[selected].astype(float)
+            deviations = readings.std(ddof=0).replace(0, 1)
+            normalized = (readings - readings.mean()) / deviations
+            st.line_chart(normalized, width="stretch")
+            st.caption(
+                "Sensor z-scores use only the currently loaded history "
+                "for display. They are not a physical health score, "
+                "causal explanation, or inputs to the RUL predictor."
+            )
+
+
 def page_comparison(df, metadata, scaler, checkpoints):
     st.header("Model comparison")
 
@@ -629,6 +820,7 @@ def main():
         "Home",
         "Input",
         "Monitoring",
+        "Engine Health Intelligence",
         "Prediction",
         "Comparison",
         "Explainability",
@@ -672,6 +864,8 @@ def main():
 
     if page == "Monitoring":
         page_monitoring(active_df)
+    elif page == "Engine Health Intelligence":
+        page_health_intelligence(active_df, metadata, scaler, checkpoints)
     elif page == "Prediction":
         page_prediction(active_df, metadata, scaler, checkpoints)
     elif page == "Comparison":
