@@ -1,0 +1,15 @@
+{
+  "validation": {
+    "rmse": 15.135759038376056,
+    "mae": 11.329253355662027,
+    "bias": 3.278741486867269,
+    "r2": 0.7213755655391835,
+    "nasa_score": 340.109375271623,
+    "nasa_score_mean": 5.668489587860383,
+    "n_samples": 60
+  },
+  "best_epoch": 5,
+  "rul_cap": 125,
+  "model": "transformer",
+  "seed": 42
+}

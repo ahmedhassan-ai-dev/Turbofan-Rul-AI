@@ -22,6 +22,12 @@ class CNNBiLSTMAttention(nn.Module):
 
     Output:
         predictions: [B, 1]
+
+    Ablation:
+        ``use_attention=False`` keeps the CNN, the BiLSTM and the
+        regression head unchanged and replaces masked additive
+        attention pooling with masked mean pooling. This is the
+        controlled variant used by the attention ablation study.
     """
 
     def __init__(
@@ -46,6 +52,7 @@ class CNNBiLSTMAttention(nn.Module):
             raise ValueError("Invalid dropout")
 
         self.input_size = input_size
+        self.use_attention = bool(use_attention)
 
         self.cnn = nn.Sequential(
             nn.Conv1d(
@@ -73,10 +80,17 @@ class CNNBiLSTMAttention(nn.Module):
             batch_first=True,
         )
 
-        self.attention = MaskedAdditiveAttention(
+        # The block is always constructed so that a fixed seed yields the
+        # same weights for the shared CNN / BiLSTM / head whether or not
+        # attention is enabled (the ablation contract). In the mean-pooling
+        # variant it is simply discarded, which also keeps the parameter
+        # count strictly smaller.
+        attention = MaskedAdditiveAttention(
             input_dim=hidden_size * 2,
             attention_dim=attention_dim,
         )
+
+        self.attention = attention if self.use_attention else None
 
         self.regression_head = nn.Sequential(
             nn.Linear(hidden_size * 2, 64),
@@ -84,10 +98,6 @@ class CNNBiLSTMAttention(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(64, 1),
         )
-
-        self.use_attention = use_attention
-        if not use_attention:
-            self.attention = None
 
     def forward(
         self,
@@ -154,19 +164,20 @@ class CNNBiLSTMAttention(nn.Module):
                 valid_mask,
             )
         else:
-            attention_weights = valid_mask.to(
-                dtype=sequence_output.dtype
+            # Masked mean pooling over the BiLSTM outputs.
+            weights = valid_mask.unsqueeze(-1).to(
+                sequence_output.dtype
             )
-            attention_weights = attention_weights / (
-                attention_weights.sum(
-                    dim=1,
-                    keepdim=True,
-                ).clamp(min=1)
-            )
+
             context = (
-                sequence_output
-                * attention_weights.unsqueeze(-1)
-            ).sum(dim=1)
+                (sequence_output * weights).sum(dim=1)
+                / weights.sum(dim=1).clamp(min=1.0)
+            )
+
+            attention_weights = (
+                weights.squeeze(-1)
+                / weights.sum(dim=1).clamp(min=1.0)
+            )
 
         predictions = self.regression_head(context)
 

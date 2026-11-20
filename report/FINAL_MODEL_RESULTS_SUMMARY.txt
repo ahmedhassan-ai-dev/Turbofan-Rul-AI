@@ -1,0 +1,60 @@
+TURBOFAN RUL PREDICTION — FINAL MODEL RESULTS SUMMARY
+=======================================================
+NASA C-MAPSS FD001 — Official Test Set (100 engines)
+
+BEST MODEL: TRANSFORMER (test RMSE 15.54, NASA score 363.2)
+
+------------------------------------------------------------
+MODEL                  | TEST RMSE | TEST MAE | R²      | NASA SCORE | NASA MEAN
+------------------------------------------------------------
+Transformer (best)     | 15.5414   | 11.9635  | 0.8601  | 363.2171   | 3.6322
+LSTM                   | 16.9256   | 12.1273  | 0.8341  | 453.9588   | 4.5396
+CNN-BiLSTM-Attn        | 17.3178   | 13.2126  | 0.8263  | 507.2170   | 5.0722
+Random Forest baseline  | 18.3486   | 13.7916  | 0.8050  | 733.9010   | 7.3390
+------------------------------------------------------------
+
+Key findings:
+- Transformer is best across ALL metrics (RMSE, MAE, R², NASA score)
+- LSTM is closest competitor (~1.4 cycles RMSE behind Transformer)
+- CNN-BiLSTM-Attention underperforms despite most parameters (198K vs 57K/103K)
+- Random Forest is clearly outperformed by all deep models (~2.8 cycles RMSE behind Transformer)
+- All models trained with same protocol: engine-wise 80/20 split, 30-cycle windows,
+  StandardScaler fitted on train only, RUL cap 125, 3 seeds (42, 123, 3407)
+
+Source: experiments/results/official_test/*.metrics.json,
+        experiments/results/official_test/test_metrics.csv,
+        experiments/registry.csv, experiments/runs/*/config.json
+
+------------------------------------------------------------
+Detailed per-model test-set results (uncapped):
+
+Transformer (seed 3407):
+  • RMSE: 15.5414 | MAE: 11.9635 | Bias: +1.6699 | R²: 0.8601
+  • NASA: 363.2171 (mean: 3.6322) — lowest penalty
+  • Checkpoint: experiments/runs/transformer_cap125_seed3407/best_model.pt
+
+LSTM (seed 123):
+  • RMSE: 16.9256 | MAE: 12.1273 | Bias: −3.3706 | R²: 0.8341
+  • NASA: 453.9588 (mean: 4.5396)
+  • Checkpoint: experiments/runs/lstm_cap125_seed123/best_model.pt
+
+CNN-BiLSTM-Attention (seed 123):
+  • RMSE: 17.3178 | MAE: 13.2126 | Bias: −0.3772 | R²: 0.8263
+  • NASA: 507.2170 (mean: 5.0722) — highest penalty
+  • Checkpoint: experiments/runs/cnn_bilstm_attention_cap125_seed123/best_model.pt
+
+Random Forest (seed 42):
+  • RMSE: 18.3486 | MAE: 13.7916 | Bias: +3.0690 | R²: 0.8050
+  • NASA: 733.9010 (mean: 7.3390) — highest penalty
+  • Checkpoint: checkpoints/random_forest.joblib
+
+------------------------------------------------------------
+Model selection: Lowest validation RMSE per family (before test evaluation).
+Test set evaluated exactly once after selection — no re-tuning on test data.
+
+Hardware: NVIDIA GeForce RTX 4050 Laptop GPU (6 GB), CUDA 12.6,
+PyTorch 2.14.1+cu126, Python 3.13.0.
+
+All 100 engines from official FD001 test set, aligned by engine ID
+from RUL_FD001.txt. Predictions saved in:
+  experiments/results/official_test/*_predictions.csv

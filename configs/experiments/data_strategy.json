@@ -1,0 +1,50 @@
+{
+  "name": "data_strategy_study",
+  "protocol": {
+    "dataset": "FD001",
+    "split": "engine_wise_80_20_seed42",
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "note": "LSTM seed 42, one factor per run: RUL target cap or input window length. The dataset, split and scaler never change."
+  },
+  "runs": [
+    {
+      "experiment_id": "lstm_cap50_seed42",
+      "tag": "data_strategy",
+      "model": "lstm",
+      "seed": 42,
+      "rul_cap": 50
+    },
+    {
+      "experiment_id": "lstm_cap100_seed42",
+      "tag": "data_strategy",
+      "model": "lstm",
+      "seed": 42,
+      "rul_cap": 100
+    },
+    {
+      "experiment_id": "lstm_window20_cap125_seed42",
+      "tag": "data_strategy",
+      "model": "lstm",
+      "seed": 42,
+      "window_size": 20
+    },
+    {
+      "experiment_id": "lstm_window50_cap125_seed42",
+      "tag": "data_strategy",
+      "model": "lstm",
+      "seed": 42,
+      "window_size": 50
+    }
+  ],
+  "defaults": {
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64
+  }
+}

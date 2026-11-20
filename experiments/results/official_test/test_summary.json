@@ -1,0 +1,54 @@
+{
+  "dataset": "FD001 official test",
+  "engines": 100,
+  "results": [
+    {
+      "model": "cnn_bilstm_attention",
+      "experiment_id": "cnn_bilstm_attention",
+      "rmse": 17.317845107307342,
+      "mae": 13.212601442337036,
+      "bias": -0.3771969318389893,
+      "r2": 0.8263286590019947,
+      "nasa_score": 507.21696642217154,
+      "nasa_score_mean": 5.072169664221716,
+      "rmse_capped_125": 16.022865624296216,
+      "mae_capped_125": 12.142601442337035
+    },
+    {
+      "model": "lstm",
+      "experiment_id": "lstm",
+      "rmse": 16.925584106426697,
+      "mae": 12.12730616092682,
+      "bias": -3.370550484657288,
+      "r2": 0.8341071049350084,
+      "nasa_score": 453.9588335547711,
+      "nasa_score_mean": 4.539588335547711,
+      "rmse_capped_125": 15.64583451009291,
+      "mae_capped_125": 11.042222390174866
+    },
+    {
+      "model": "random_forest",
+      "experiment_id": "random_forest",
+      "rmse": 18.348562769729035,
+      "mae": 13.791590125745714,
+      "bias": 3.0690112272368166,
+      "r2": 0.8050404293904494,
+      "nasa_score": 733.9009687924557,
+      "nasa_score_mean": 7.339009687924557,
+      "rmse_capped_125": 17.117942288277785,
+      "mae_capped_125": 12.721590125745713
+    },
+    {
+      "model": "transformer",
+      "experiment_id": "transformer",
+      "rmse": 15.541365951345055,
+      "mae": 11.963457427024842,
+      "bias": 1.66993155002594,
+      "r2": 0.860131850353016,
+      "nasa_score": 363.2170616597647,
+      "nasa_score_mean": 3.6321706165976466,
+      "rmse_capped_125": 14.707307983790626,
+      "mae_capped_125": 10.870608382225036
+    }
+  ]
+}

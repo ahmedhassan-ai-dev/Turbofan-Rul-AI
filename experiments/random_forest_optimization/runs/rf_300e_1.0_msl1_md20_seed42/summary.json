@@ -1,0 +1,21 @@
+{
+  "best_epoch": 1,
+  "epochs_ran": 1,
+  "best_val_rmse": 18.729545630515048,
+  "best_metrics": {
+    "rmse": 18.729545630515048,
+    "mae": 13.402887555562074,
+    "bias": 4.8007599806320504,
+    "r2": 0.5733563627392018,
+    "nasa_score": 638.5168849591003,
+    "nasa_score_mean": 10.641948082651671,
+    "n_samples": 60
+  },
+  "training_seconds": 20.02867609995883,
+  "seconds_per_epoch": 20.02867609995883,
+  "parameter_count": 3027358,
+  "device": "cpu",
+  "rul_cap": 125.0,
+  "peak_gpu_memory_mb": null,
+  "seed": 42
+}

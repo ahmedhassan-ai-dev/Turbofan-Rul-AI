@@ -1,0 +1,27 @@
+{
+  "name": "attention_ablation",
+  "protocol": {
+    "dataset": "FD001",
+    "split": "engine_wise_80_20_seed42",
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "note": "Identical CNN + BiLSTM + head; padding-aware mean pooling replaces additive attention. Same seeds as the hybrid main runs."
+  },
+  "runs": [
+    {"experiment_id": "cnn_bilstm_mean_cap125_seed42", "tag": "ablation", "model": "cnn_bilstm_mean", "seed": 42},
+    {"experiment_id": "cnn_bilstm_mean_cap125_seed123", "tag": "ablation", "model": "cnn_bilstm_mean", "seed": 123},
+    {"experiment_id": "cnn_bilstm_mean_cap125_seed3407", "tag": "ablation", "model": "cnn_bilstm_mean", "seed": 3407}
+  ],
+  "defaults": {
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64
+  }
+}

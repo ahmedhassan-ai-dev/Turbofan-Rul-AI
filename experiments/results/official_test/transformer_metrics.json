@@ -1,0 +1,45 @@
+{
+  "model": "transformer",
+  "checkpoint": "C:/Users/iderm/.config/freebuff-desktop/local-projects/f21072e0-82db-4211-b216-6ff0abeac801/repo/experiments/runs/transformer_cap125_seed3407/best_model.pt",
+  "dataset": "FD001 official test",
+  "window_size": 30,
+  "test_engines": 100,
+  "scaler": "train_split_only",
+  "features": [
+    "setting_1",
+    "setting_2",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "metrics_uncapped": {
+    "rmse": 15.541365951345055,
+    "mae": 11.963457427024842,
+    "bias": 1.66993155002594,
+    "r2": 0.860131850353016,
+    "nasa_score": 363.2170616597647,
+    "nasa_score_mean": 3.6321706165976466,
+    "n_samples": 100
+  },
+  "metrics_capped_125": {
+    "rmse": 14.707307983790626,
+    "mae": 10.870608382225036,
+    "bias": 2.655867600440979,
+    "r2": 0.8653033901426666,
+    "nasa_score": 338.19894255355166,
+    "nasa_score_mean": 3.3819894255355165,
+    "n_samples": 100
+  }
+}

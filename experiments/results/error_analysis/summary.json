@@ -1,0 +1,144 @@
+{
+  "models": [
+    "cnn_bilstm_attention",
+    "lstm",
+    "random_forest",
+    "transformer"
+  ],
+  "metrics": [
+    {
+      "model": "cnn_bilstm_attention",
+      "rmse": 17.317845107307342,
+      "mae": 13.212601442337036,
+      "bias": -0.37719693183899006,
+      "r2": 0.8263286590019947,
+      "nasa_score": 507.21696642217154,
+      "nasa_score_mean": 5.072169664221716
+    },
+    {
+      "model": "lstm",
+      "rmse": 16.9255841064267,
+      "mae": 12.12730616092682,
+      "bias": -3.3705504846572882,
+      "r2": 0.8341071049350083,
+      "nasa_score": 453.9588335547713,
+      "nasa_score_mean": 4.5395883355477125
+    },
+    {
+      "model": "random_forest",
+      "rmse": 18.348562769729035,
+      "mae": 13.791590125745714,
+      "bias": 3.0690112272368193,
+      "r2": 0.8050404293904493,
+      "nasa_score": 733.900968792456,
+      "nasa_score_mean": 7.33900968792456
+    },
+    {
+      "model": "transformer",
+      "rmse": 15.541365951345053,
+      "mae": 11.963457427024842,
+      "bias": 1.6699315500259404,
+      "r2": 0.860131850353016,
+      "nasa_score": 363.21706165976457,
+      "nasa_score_mean": 3.6321706165976457
+    }
+  ],
+  "horizons": [
+    {
+      "model": "cnn_bilstm_attention",
+      "horizon": "Long (>100)",
+      "n_engines": 33,
+      "rmse": 18.550337899225255,
+      "mae": 14.493094010786576,
+      "bias": -10.77060838179155
+    },
+    {
+      "model": "cnn_bilstm_attention",
+      "horizon": "Medium (51-100)",
+      "n_engines": 34,
+      "rmse": 20.125855059222417,
+      "mae": 15.60064147500431,
+      "bias": 3.988165126127355
+    },
+    {
+      "model": "cnn_bilstm_attention",
+      "horizon": "Short (<=50)",
+      "n_engines": 33,
+      "rmse": 12.13968985035829,
+      "mae": 9.471703991745457,
+      "bias": 5.518568761420973
+    },
+    {
+      "model": "lstm",
+      "horizon": "Long (>100)",
+      "n_engines": 33,
+      "rmse": 20.007154882356573,
+      "mae": 16.063100641424004,
+      "bias": -10.304614905155068
+    },
+    {
+      "model": "lstm",
+      "horizon": "Medium (51-100)",
+      "n_engines": 34,
+      "rmse": 20.313612064622948,
+      "mae": 15.467883390538832,
+      "bias": 1.0637893676757817
+    },
+    {
+      "model": "lstm",
+      "horizon": "Short (<=50)",
+      "n_engines": 33,
+      "rmse": 6.532522846697534,
+      "mae": 4.749704837799072,
+      "bias": -1.0051998514117615
+    },
+    {
+      "model": "random_forest",
+      "horizon": "Long (>100)",
+      "n_engines": 33,
+      "rmse": 19.68251298108183,
+      "mae": 15.704513179301058,
+      "bias": -10.228313554010521
+    },
+    {
+      "model": "random_forest",
+      "horizon": "Medium (51-100)",
+      "n_engines": 34,
+      "rmse": 21.863366517468524,
+      "mae": 17.786033626504217,
+      "bias": 13.139990492078732
+    },
+    {
+      "model": "random_forest",
+      "horizon": "Short (<=50)",
+      "n_engines": 33,
+      "rmse": 11.84559892186032,
+      "mae": 7.763179828984643,
+      "bias": 5.990175553798551
+    },
+    {
+      "model": "transformer",
+      "horizon": "Long (>100)",
+      "n_engines": 33,
+      "rmse": 17.081779327070546,
+      "mae": 13.488618099328244,
+      "bias": -4.900767239657314
+    },
+    {
+      "model": "transformer",
+      "horizon": "Medium (51-100)",
+      "n_engines": 34,
+      "rmse": 19.47904818465846,
+      "mae": 16.573681102079505,
+      "bias": 6.355308532714842
+    },
+    {
+      "model": "transformer",
+      "horizon": "Short (<=50)",
+      "n_engines": 33,
+      "rmse": 7.014477757480278,
+      "mae": 5.6883693319378485,
+      "bias": 3.41327223633275
+    }
+  ]
+}

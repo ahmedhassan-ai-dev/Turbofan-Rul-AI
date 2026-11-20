@@ -1,0 +1,15 @@
+{
+  "validation": {
+    "rmse": 14.770619789655441,
+    "mae": 11.763762998580933,
+    "bias": 0.4514827569325765,
+    "r2": 0.734656637738507,
+    "nasa_score": 236.70597146765678,
+    "nasa_score_mean": 3.945099524460946,
+    "n_samples": 60
+  },
+  "best_epoch": 3,
+  "rul_cap": 125,
+  "model": "cnn_bilstm_attention",
+  "seed": 42
+}

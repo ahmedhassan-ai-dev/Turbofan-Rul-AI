@@ -1,0 +1,41 @@
+{
+  "experiment_id": "random_forest_cap125_seed42",
+  "tag": "main",
+  "model": "random_forest",
+  "model_kwargs": {
+    "n_estimators": 150,
+    "min_samples_leaf": 3,
+    "max_features": 1.0
+  },
+  "window_size": 30,
+  "rul_cap": 125.0,
+  "seed": 42,
+  "learning_rate": null,
+  "weight_decay": null,
+  "batch_size": null,
+  "epochs": 1,
+  "patience": null,
+  "features": [
+    "setting_1",
+    "setting_2",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "feature_count": 17,
+  "train_windows": 16561,
+  "val_samples": 60,
+  "notes": "statistical window features + RandomForestRegressor"
+}

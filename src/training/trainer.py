@@ -1,6 +1,21 @@
+"""Training loop for RUL regression.
+
+Protocol decisions (documented, not tuned on the test set):
+
+* Optimizer: Adam with a constant learning rate.
+* Loss: MSE on RUL targets, optionally capped at ``rul_cap``
+  (standard C-MAPSS practice uses 125 cycles: beyond that the exact
+  remaining life is not identifiable from the sensors).
+* Validation metrics are always computed against the *uncapped* true
+  RUL of the validation endpoints, so reports are comparable across
+  capping strategies.
+* Model selection and early stopping use validation RMSE only.
+* Gradient clipping at norm 1.0.
+"""
 
 import copy
 import json
+import os
 import random
 import time
 from pathlib import Path
@@ -23,12 +38,31 @@ def prepare_training_targets(y, rul_cap=None):
 
 
 def set_seed(seed: int) -> None:
+    """Best-effort determinism across Python, NumPy and PyTorch."""
+
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
 
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+def _loader_generator(loader, seed: int) -> None:
+    """Seed the sampler of an existing DataLoader in place."""
+
+    generator = torch.Generator()
+    generator.manual_seed(seed)
+
+    if getattr(loader, "sampler", None) is not None and hasattr(
+        loader.sampler, "generator"
+    ):
+        loader.sampler.generator = generator
+
+    loader.generator = generator
 
 
 class RULTrainer:
@@ -43,6 +77,12 @@ class RULTrainer:
         device: str | None = None,
         output_dir: str = "experiments/runs/lstm_smoke",
         rul_cap: float | None = None,
+        model_name: str | None = None,
+        model_kwargs: dict | None = None,
+        seed: int = 42,
+        config: dict | None = None,
+        weight_decay: float = 0.0,
+        grad_clip: float = 1.0,
     ):
         self.device = torch.device(
             device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,15 +98,29 @@ class RULTrainer:
             raise ValueError("rul_cap must be positive")
         self.rul_cap = rul_cap
 
+        self.model_name = model_name
+        self.model_kwargs = model_kwargs or {}
+        self.seed = seed
+        self.grad_clip = grad_clip
+
+        _loader_generator(train_loader, seed)
+
         self.optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=learning_rate,
+            weight_decay=weight_decay,
         )
 
         self.criterion = nn.MSELoss()
 
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        if config is not None:
+            (self.output_dir / "config.json").write_text(
+                json.dumps(config, indent=2),
+                encoding="utf-8",
+            )
 
     def train_epoch(self):
         self.model.train()
@@ -92,10 +146,11 @@ class RULTrainer:
 
             loss.backward()
 
-            torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(),
-                max_norm=1.0,
-            )
+            if self.grad_clip > 0:
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(),
+                    max_norm=self.grad_clip,
+                )
 
             self.optimizer.step()
 
@@ -106,7 +161,9 @@ class RULTrainer:
         return total_loss / total_samples
 
     @torch.inference_mode()
-    def evaluate(self):
+    def evaluate(self, loader=None):
+        loader = loader or self.val_loader
+
         self.model.eval()
 
         targets = []
@@ -114,7 +171,7 @@ class RULTrainer:
         engine_ids = []
         cycles = []
 
-        for batch in self.val_loader:
+        for batch in loader:
             x = batch["x"].to(self.device)
             mask = batch["mask"].to(self.device)
 
@@ -150,6 +207,9 @@ class RULTrainer:
         no_improvement = 0
         best_state = None
 
+        if torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
+
         start_time = time.perf_counter()
 
         for epoch in range(1, self.epochs + 1):
@@ -167,6 +227,7 @@ class RULTrainer:
                 "val_mae": metrics["mae"],
                 "val_bias": metrics["bias"],
                 "val_nasa_score": metrics["nasa_score"],
+                "val_nasa_score_mean": metrics["nasa_score_mean"],
                 "duration_seconds": duration,
             })
 
@@ -190,6 +251,11 @@ class RULTrainer:
 
                 torch.save(
                     {
+                        "model_name": self.model_name,
+                        "model_kwargs": {
+                            "input_size": self.model.input_size,
+                            **self.model_kwargs,
+                        },
                         "model_state_dict": best_state,
                         "epoch": best_epoch,
                         "val_metrics": metrics,
@@ -221,18 +287,30 @@ class RULTrainer:
 
         self.model.load_state_dict(best_state)
 
-        best_metrics, _ = self.evaluate()
+        best_metrics, best_predictions = self.evaluate()
+
+        peak_memory_mb = None
+        if torch.cuda.is_available():
+            peak_memory_mb = (
+                torch.cuda.max_memory_allocated() / (1024 ** 2)
+            )
 
         summary = {
             "best_epoch": best_epoch,
+            "epochs_ran": len(history),
             "best_val_rmse": best_rmse,
             "best_metrics": best_metrics,
             "training_seconds": elapsed,
+            "seconds_per_epoch": elapsed / max(len(history), 1),
             "parameter_count": sum(
                 p.numel() for p in self.model.parameters()
             ),
             "device": str(self.device),
             "rul_cap": self.rul_cap,
+            "peak_gpu_memory_mb": peak_memory_mb,
+            "seed": self.seed,
+            "torch_version": torch.__version__,
+            "cuda_available": torch.cuda.is_available(),
         }
 
         (self.output_dir / "summary.json").write_text(
@@ -240,8 +318,21 @@ class RULTrainer:
             encoding="utf-8",
         )
 
+        (self.output_dir / "metrics.json").write_text(
+            json.dumps(
+                {
+                    "validation": best_metrics,
+                    "best_epoch": best_epoch,
+                    "rul_cap": self.rul_cap,
+                    "model": self.model_name,
+                    "seed": self.seed,
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
         print("\n=== TRAINING SUMMARY ===")
         print(json.dumps(summary, indent=2))
 
         return summary
-

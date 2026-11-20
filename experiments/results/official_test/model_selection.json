@@ -1,0 +1,41 @@
+{
+  "rule": "lowest validation RMSE among runs tagged 'main'; the official test set was not used for selection",
+  "selected": {
+    "cnn_bilstm_attention": {
+      "experiment_id": "cnn_bilstm_attention_cap125_seed123",
+      "run_dir": "experiments/runs/cnn_bilstm_attention_cap125_seed123",
+      "checkpoint": "experiments/runs/cnn_bilstm_attention_cap125_seed123/best_model.pt",
+      "val_rmse": 14.465680888306258,
+      "seed": 123,
+      "rul_cap": 125.0,
+      "window_size": 30
+    },
+    "lstm": {
+      "experiment_id": "lstm_cap125_seed123",
+      "run_dir": "experiments/runs/lstm_cap125_seed123",
+      "checkpoint": "experiments/runs/lstm_cap125_seed123/best_model.pt",
+      "val_rmse": 13.115740809760176,
+      "seed": 123,
+      "rul_cap": 125.0,
+      "window_size": 30
+    },
+    "random_forest": {
+      "experiment_id": "random_forest_cap125_seed42",
+      "run_dir": "experiments/runs/random_forest_cap125_seed42",
+      "checkpoint": "checkpoints/random_forest.joblib",
+      "val_rmse": 18.549619037185813,
+      "seed": 42,
+      "rul_cap": 125.0,
+      "window_size": 30
+    },
+    "transformer": {
+      "experiment_id": "transformer_cap125_seed3407",
+      "run_dir": "experiments/runs/transformer_cap125_seed3407",
+      "checkpoint": "experiments/runs/transformer_cap125_seed3407/best_model.pt",
+      "val_rmse": 13.226811054433208,
+      "seed": 3407,
+      "rul_cap": 125.0,
+      "window_size": 30
+    }
+  }
+}

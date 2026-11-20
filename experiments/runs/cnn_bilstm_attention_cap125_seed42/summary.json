@@ -1,0 +1,23 @@
+{
+  "best_epoch": 3,
+  "epochs_ran": 13,
+  "best_val_rmse": 14.770619789655441,
+  "best_metrics": {
+    "rmse": 14.770619789655441,
+    "mae": 11.763762998580933,
+    "bias": 0.4514827569325765,
+    "r2": 0.734656637738507,
+    "nasa_score": 236.70597146765678,
+    "nasa_score_mean": 3.945099524460946,
+    "n_samples": 60
+  },
+  "training_seconds": 75.27154970000265,
+  "seconds_per_epoch": 5.790119207692512,
+  "parameter_count": 198209,
+  "device": "cuda",
+  "rul_cap": 125,
+  "peak_gpu_memory_mb": 74.18701171875,
+  "seed": 42,
+  "torch_version": "2.14.1+cu126",
+  "cuda_available": true
+}
