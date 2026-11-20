@@ -34,6 +34,10 @@ from src.inference.pipeline import (  # noqa: E402
     validate_raw_frame,
 )
 from src.inference.predictor import RULPredictor  # noqa: E402
+from src.inference.demo_state import (  # noqa: E402
+    input_signature,
+    is_official_reference_allowed,
+)
 
 
 PROCESSED_DIR = ROOT / "data" / "processed"
@@ -224,6 +228,7 @@ def input_controls(metadata, scaler):
                 "Sample engine from the dataset",
                 "Upload a sensor CSV",
             ],
+            key="input_source",
         )
 
         if mode == "Sample engine from the dataset":
@@ -279,7 +284,11 @@ def input_controls(metadata, scaler):
 
         try:
             df = pd.read_csv(io.BytesIO(uploaded.getvalue()))
-            validate_raw_frame(df)
+            df = validate_raw_frame(df)
+            if df["engine_id"].nunique() != 1:
+                raise InputValidationError(
+                    "Upload one engine history per CSV for the live demo."
+                )
         except InputValidationError as error:
             st.error(str(error))
             return None
@@ -308,7 +317,7 @@ def page_input_summary(df):
     col_c.metric("Rows", len(df))
 
     st.subheader("Validated input preview")
-    st.dataframe(df.head(12), use_container_width=True)
+    st.dataframe(df.head(12), width="stretch")
 
     st.caption(
         "Validation performed: required columns, numeric values, "
@@ -345,7 +354,7 @@ def page_monitoring(df: pd.DataFrame):
         st.caption("Operating conditions (mean over the loaded window)")
         st.dataframe(
             df[settings].describe().loc[["mean", "std", "min", "max"]],
-            use_container_width=True,
+            width="stretch",
         )
 
     sensors = [
@@ -376,7 +385,7 @@ def page_monitoring(df: pd.DataFrame):
 
         axes[-1, 0].set_xlabel("Cycle")
         fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig, width="stretch")
         plt.close(fig)
 
 
@@ -402,6 +411,16 @@ def page_prediction(df, metadata, scaler, checkpoints):
         format_func=lambda name: f"{name} — {MODEL_DESCRIPTIONS.get(name, '')}",
     )
 
+    # A stored result is valid only for the exact input, source and model.
+    signature = input_signature(
+        df,
+        model_name=choice,
+        source=st.session_state.get("input_source", ""),
+    )
+    if st.session_state.get("prediction_signature") != signature:
+        st.session_state.pop("results", None)
+        st.session_state.pop("model_used", None)
+
     if st.button("Estimate RUL", type="primary"):
         with st.spinner("Running inference..."):
             try:
@@ -419,11 +438,15 @@ def page_prediction(df, metadata, scaler, checkpoints):
 
         st.session_state["results"] = results
         st.session_state["model_used"] = choice
-        st.session_state["input_rows"] = len(df)
+        st.session_state["prediction_signature"] = signature
 
     results = st.session_state.get("results")
 
-    if results is None or st.session_state.get("model_used") != choice:
+    if (
+        results is None
+        or st.session_state.get("model_used") != choice
+        or st.session_state.get("prediction_signature") != signature
+    ):
         return
 
     prediction = float(results["predicted_rul"].iloc[0])
@@ -433,24 +456,29 @@ def page_prediction(df, metadata, scaler, checkpoints):
     col_b.metric("Model", choice)
     col_c.metric("Cycles used", int(results["window_length"].iloc[0]))
 
-    reference = reference_labels()
-
-    if not reference.empty:
-        engine_id = int(results["engine_id"].iloc[0])
-        row = reference[reference["engine_id"] == engine_id]
-
-        if not row.empty:
-            truth = float(row["rul"].iloc[0])
-            st.caption(
-                f"Official reference label for test engine {engine_id}: "
-                f"{truth:.0f} cycles (error "
-                f"{prediction - truth:+.1f})."
-            )
+    # Official labels belong exclusively to the bundled NASA test sample.
+    # A user-uploaded CSV may reuse an engine ID but has no known RUL label.
+    if is_official_reference_allowed(
+        source=st.session_state.get("input_source", ""),
+        input_frame=df,
+        predictions=results,
+    ):
+        reference = reference_labels()
+        if not reference.empty:
+            engine_id = int(results["engine_id"].iloc[0])
+            row = reference[reference["engine_id"] == engine_id]
+            if not row.empty:
+                truth = float(row["rul"].iloc[0])
+                st.caption(
+                    f"Official reference label for test engine {engine_id}: "
+                    f"{truth:.0f} cycles (error "
+                    f"{prediction - truth:+.1f})."
+                )
 
     st.write("Input summary")
     st.dataframe(
         results.rename(columns={"predicted_rul": "predicted_rul (cycles)"}),
-        use_container_width=True,
+        width="stretch",
     )
 
     fig, ax = plt.subplots(figsize=(4.5, 4.5))
@@ -460,7 +488,7 @@ def page_prediction(df, metadata, scaler, checkpoints):
     ax.set_title("Predicted remaining useful life")
     ax.set_ylim(0, max(150, prediction * 1.2))
     fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig, width="stretch")
     plt.close(fig)
 
 
@@ -500,7 +528,7 @@ def page_comparison(df, metadata, scaler, checkpoints):
 
     table = pd.DataFrame(rows)
 
-    st.dataframe(table, use_container_width=True)
+    st.dataframe(table, width="stretch")
 
     valid = table.dropna(subset=["predicted_rul"])
 
@@ -514,7 +542,7 @@ def page_comparison(df, metadata, scaler, checkpoints):
         ax.set_xlabel("Predicted RUL (cycles)")
         ax.set_title("RUL estimate per model for the same input")
         fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig, width="stretch")
         plt.close(fig)
 
     st.caption(
@@ -565,7 +593,7 @@ failure.
     ax.legend(fontsize=7, ncol=3)
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
+    st.pyplot(fig, width="stretch")
     plt.close(fig)
 
     first_last = pd.DataFrame({
@@ -584,7 +612,7 @@ failure.
             first_last["relative_change"].abs()
             .sort_values(ascending=False).index
         ).head(8),
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -631,8 +659,12 @@ def main():
 
     df = input_controls(metadata, scaler)
 
-    active_df = df if df is not None else st.session_state.get("active_df")
-    st.session_state["active_df"] = active_df
+    # Never reuse a previous input when a file is removed or the source changes.
+    active_df = df
+    if active_df is None:
+        st.session_state.pop("results", None)
+        st.session_state.pop("model_used", None)
+        st.session_state.pop("prediction_signature", None)
 
     if page == "Input":
         page_input_summary(active_df)

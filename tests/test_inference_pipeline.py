@@ -106,3 +106,19 @@ def test_out_of_range_engine_rejected():
 
     with pytest.raises(InputValidationError):
         load_sample_engine(999, "test")
+
+
+def test_fractional_engine_id_rejected():
+    df = make_frame()
+    df["engine_id"] = df["engine_id"].astype(float)
+    df.loc[0, "engine_id"] = 1.7
+    with pytest.raises(InputValidationError, match="whole numbers"):
+        validate_raw_frame(df)
+
+
+def test_fractional_cycle_rejected():
+    df = make_frame()
+    df["cycle"] = df["cycle"].astype(float)
+    df.loc[0, "cycle"] = 1.5
+    with pytest.raises(InputValidationError, match="whole numbers"):
+        validate_raw_frame(df)

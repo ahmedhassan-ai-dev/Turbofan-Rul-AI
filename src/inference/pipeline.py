@@ -103,6 +103,15 @@ def validate_raw_frame(df: pd.DataFrame) -> pd.DataFrame:
             "engine_id and cycle must be positive integers."
         )
 
+    identifiers = df[["engine_id", "cycle"]].to_numpy(dtype=float)
+    if (
+        not np.isfinite(identifiers).all()
+        or not np.equal(identifiers, np.floor(identifiers)).all()
+    ):
+        raise InputValidationError(
+            "engine_id and cycle must be finite whole numbers."
+        )
+
     df["engine_id"] = df["engine_id"].astype(int)
     df["cycle"] = df["cycle"].astype(int)
 
