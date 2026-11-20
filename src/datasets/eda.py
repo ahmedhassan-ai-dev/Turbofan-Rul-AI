@@ -4,7 +4,8 @@ from pathlib import Path
 import pandas as pd
 
 
-DATA_PATH = Path("data/raw/train_FD001.txt")
+ROOT = Path(__file__).resolve().parents[2]
+DATA_PATH = ROOT / "data" / "raw" / "train_FD001.txt"
 
 COLUMNS = (
     ["engine_id", "cycle"]
@@ -14,6 +15,11 @@ COLUMNS = (
 
 
 def main():
+    if not DATA_PATH.is_file():
+        raise FileNotFoundError(
+            f"Raw FD001 training data not found: {DATA_PATH}"
+        )
+
     df = pd.read_csv(
         DATA_PATH,
         sep=r"\s+",

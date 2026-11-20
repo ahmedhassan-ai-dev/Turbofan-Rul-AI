@@ -1,0 +1,45 @@
+{
+  "model": "lstm",
+  "checkpoint": "C:/Users/iderm/.config/freebuff-desktop/local-projects/f21072e0-82db-4211-b216-6ff0abeac801/repo/experiments/runs/lstm_cap125_seed123/best_model.pt",
+  "dataset": "FD001 official test",
+  "window_size": 30,
+  "test_engines": 100,
+  "scaler": "train_split_only",
+  "features": [
+    "setting_1",
+    "setting_2",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "metrics_uncapped": {
+    "rmse": 16.925584106426697,
+    "mae": 12.12730616092682,
+    "bias": -3.370550484657288,
+    "r2": 0.8341071049350084,
+    "nasa_score": 453.9588335547711,
+    "nasa_score_mean": 4.539588335547711,
+    "n_samples": 100
+  },
+  "metrics_capped_125": {
+    "rmse": 15.64583451009291,
+    "mae": 11.042222390174866,
+    "bias": -2.3156342554092406,
+    "r2": 0.8475639257178975,
+    "nasa_score": 406.10542837261374,
+    "nasa_score_mean": 4.061054283726137,
+    "n_samples": 100
+  }
+}

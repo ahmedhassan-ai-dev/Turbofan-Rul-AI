@@ -1,0 +1,34 @@
+{
+  "name": "main_multiseed",
+  "protocol": {
+    "dataset": "FD001",
+    "split": "engine_wise_80_20_seed42",
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "note": "Only the seed changes between runs of the same model."
+  },
+  "runs": [
+    {"experiment_id": "lstm_cap125_seed42", "tag": "main", "model": "lstm", "seed": 42},
+    {"experiment_id": "lstm_cap125_seed123", "tag": "main", "model": "lstm", "seed": 123},
+    {"experiment_id": "lstm_cap125_seed3407", "tag": "main", "model": "lstm", "seed": 3407},
+    {"experiment_id": "transformer_cap125_seed42", "tag": "main", "model": "transformer", "seed": 42},
+    {"experiment_id": "transformer_cap125_seed123", "tag": "main", "model": "transformer", "seed": 123},
+    {"experiment_id": "transformer_cap125_seed3407", "tag": "main", "model": "transformer", "seed": 3407},
+    {"experiment_id": "cnn_bilstm_attention_cap125_seed42", "tag": "main", "model": "cnn_bilstm_attention", "seed": 42},
+    {"experiment_id": "cnn_bilstm_attention_cap125_seed123", "tag": "main", "model": "cnn_bilstm_attention", "seed": 123},
+    {"experiment_id": "cnn_bilstm_attention_cap125_seed3407", "tag": "main", "model": "cnn_bilstm_attention", "seed": 3407}
+  ],
+  "defaults": {
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "weight_decay": 0.0
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "model": "cnn_bilstm_attention",
+  "checkpoint": "C:/Users/iderm/.config/freebuff-desktop/local-projects/f21072e0-82db-4211-b216-6ff0abeac801/repo/experiments/runs/cnn_bilstm_attention_cap125_seed123/best_model.pt",
+  "dataset": "FD001 official test",
+  "window_size": 30,
+  "test_engines": 100,
+  "scaler": "train_split_only",
+  "features": [
+    "setting_1",
+    "setting_2",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "metrics_uncapped": {
+    "rmse": 17.317845107307342,
+    "mae": 13.212601442337036,
+    "bias": -0.3771969318389893,
+    "r2": 0.8263286590019947,
+    "nasa_score": 507.21696642217154,
+    "nasa_score_mean": 5.072169664221716,
+    "n_samples": 100
+  },
+  "metrics_capped_125": {
+    "rmse": 16.022865624296216,
+    "mae": 12.142601442337035,
+    "bias": 0.6928030681610108,
+    "r2": 0.840128638997767,
+    "nasa_score": 463.90753565125516,
+    "nasa_score_mean": 4.639075356512552,
+    "n_samples": 100
+  }
+}

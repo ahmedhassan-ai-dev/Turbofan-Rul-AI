@@ -1,0 +1,5 @@
+model,best_experiment_id,test_rmse,test_mae,test_r2,nasa_score,nasa_mean,checkpoint
+Transformer,transformer_cap125_seed3407,15.541365951345055,11.963457427024842,0.860131850353016,363.2170616597647,3.6321706165976466,experiments/runs/transformer_cap125_seed3407/best_model.pt
+LSTM,lstm_cap125_seed123,16.925584106426697,12.12730616092682,0.8341071049350084,453.9588335547711,4.539588335547711,experiments/runs/lstm_cap125_seed123/best_model.pt
+CNN-BiLSTM-Attention,cnn_bilstm_attention_cap125_seed123,17.317845107307342,13.212601442337036,0.8263286590019947,507.21696642217154,5.072169664221716,experiments/runs/cnn_bilstm_attention_cap125_seed123/best_model.pt
+Random Forest,random_forest_cap125_seed42,18.348562769729035,13.791590125745714,0.8050404293904494,733.9009687924557,7.339009687924557,checkpoints/random_forest.joblib

@@ -1,0 +1,9 @@
+{
+  "model": "cnn_bilstm_attention",
+  "cnn_channels": 64,
+  "hidden_size": 64,
+  "num_layers": 2,
+  "attention_dim": 64,
+  "dropout": 0.2,
+  "use_attention": false
+}

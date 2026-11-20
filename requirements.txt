@@ -1,7 +1,7 @@
 # Data processing
 numpy>=1.26,<3
-pandas>=2.2,<3
-scikit-learn>=1.5,<2
+pandas>=2.2,<4
+scikit-learn==1.8.0
 
 # Visualization
 matplotlib>=3.9,<4
@@ -16,6 +16,13 @@ pytest>=8,<10
 # Progress bars
 tqdm>=4.66,<5
 
+# Model persistence
 joblib>=1.4,<2
 
+# Deep learning
+# For a CUDA build install from the official index, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu126
 torch>=2.5,<3
+
+# Interactive demo
+streamlit>=1.30,<2

@@ -1,0 +1,13 @@
+{
+  "window_size": 30,
+  "feature_count": 17,
+  "batch_sizes": [
+    1,
+    100
+  ],
+  "warmup": 5,
+  "repetitions": 20,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "note": "Latency for every model was measured on the same device. Training times come from the registry and record the device each run used."
+}

@@ -1,0 +1,12 @@
+{
+  "validation": {
+    "rmse": 18.49609995705641,
+    "mae": 13.411027425358242,
+    "bias": 4.51536305006205,
+    "r2": 0.5839254834334056,
+    "nasa_score": 626.7405789856015,
+    "nasa_score_mean": 10.445676316426692,
+    "n_samples": 60
+  },
+  "model": "random_forest_optimized"
+}

@@ -1,0 +1,52 @@
+{
+  "name": "lstm_hyperparameter_study",
+  "protocol": {
+    "dataset": "FD001",
+    "split": "engine_wise_80_20_seed42",
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "batch_size": 64,
+    "baseline_reference": "lstm_cap125_seed42 (lr=0.001, hidden=64)",
+    "note": "One factor changes per run relative to the baseline: learning rate or hidden size."
+  },
+  "runs": [
+    {
+      "experiment_id": "lstm_hp_lr0.0005_seed42",
+      "tag": "hyperparameter",
+      "model": "lstm",
+      "seed": 42,
+      "learning_rate": 0.0005
+    },
+    {
+      "experiment_id": "lstm_hp_lr0.002_seed42",
+      "tag": "hyperparameter",
+      "model": "lstm",
+      "seed": 42,
+      "learning_rate": 0.002
+    },
+    {
+      "experiment_id": "lstm_hp_hidden32_seed42",
+      "tag": "hyperparameter",
+      "model": "lstm",
+      "seed": 42,
+      "model_kwargs": {"hidden_size": 32}
+    },
+    {
+      "experiment_id": "lstm_hp_hidden128_seed42",
+      "tag": "hyperparameter",
+      "model": "lstm",
+      "seed": 42,
+      "model_kwargs": {"hidden_size": 128}
+    }
+  ],
+  "defaults": {
+    "window_size": 30,
+    "rul_cap": 125,
+    "epochs": 60,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "batch_size": 64
+  }
+}
